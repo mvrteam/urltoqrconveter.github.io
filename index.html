@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QRGen - URL to QR Code Converter</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script><script type='text/javascript' src='//sequenceclickmeasles.com/02/99/f2/0299f297dcf4b0bfc06715dc7e583223.js'></script><script type='text/javascript' src='//sequenceclickmeasles.com/84/05/35/8405354d079396d844ffd7a110a4d0c2.js'></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --background: #ffffff;
+            --text: #333333;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        .dark-mode {
+            --background: #121212;
+            --text: #f8f9fa;
+            --light: #2d2d2d;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            transition: var(--transition);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #loading-screen h1 {
+            color: white;
+            margin-top: 20px;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        /* App Container */
+        .app-container {
+            max-width: 100%;
+            padding: 20px;
+            display: none;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+        }
+
+        .logo svg {
+            margin-right: 8px;
+        }
+
+        /* Hamburger Menu */
+        .menu-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 0;
+        }
+
+        .menu-btn span {
+            height: 3px;
+            width: 100%;
+            background-color: var(--primary);
+            border-radius: 3px;
+            transition: var(--transition);
+        }
+
+        .menu-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+
+        .menu-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .menu-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -6px);
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background-color: var(--light);
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            transition: right 0.3s ease;
+            padding: 80px 20px 20px;
+            overflow-y: auto;
+        }
+
+        nav.open {
+            right: 0;
+        }
+
+        .nav-list {
+            list-style: none;
+        }
+
+        .nav-list li {
+            margin-bottom: 15px;
+        }
+
+        .nav-list a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            font-size: 1.1rem;
+            display: block;
+            padding: 10px;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+        .nav-list a:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .close-nav {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text);
+        }
+
+        /* Main Content */
+        .card {
+            background-color: var(--light);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+        }
+
+        h2 {
+            margin-bottom: 15px;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* URL Input */
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input[type="url"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        input[type="url"]:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .error-message {
+            color: var(--warning);
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        /* Style Options */
+        .style-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .style-option {
+            position: relative;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: var(--transition);
+            aspect-ratio: 1;
+        }
+
+        .style-option:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .style-option.selected {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary);
+        }
+
+        .style-option img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .style-name {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px;
+            text-align: center;
+            font-size: 0.8rem;
+        }
+
+        /* Color Options */
+        .color-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid transparent;
+        }
+
+        .color-option.selected {
+            border-color: var(--dark);
+            transform: scale(1.1);
+        }
+
+        /* Logo Upload */
+        .logo-upload {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .logo-preview {
+            width: 80px;
+            height: 80px;
+            border: 2px dashed var(--gray);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+
+        .logo-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            display: none;
+        }
+
+        .logo-upload-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .logo-upload-btn:hover {
+            background-color: var(--secondary);
+        }
+
+        /* Size Options */
+        .size-options {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .size-options input {
+            margin: 0 10px;
+            width: 70px;
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .size-options button {
+            background: none;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .size-options button:hover {
+            background-color: var(--secondary);
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary);
+        }
+
+        .btn-secondary {
+            background-color: var(--gray);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .btn svg {
+            margin-right: 8px;
+        }
+
+        /* QR Preview */
+        #qr-preview-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+        }
+
+        #qr-preview {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .download-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #35a9cb;
+        }
+
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #d21c6c;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            z-index: 99;
+            transition: var(--transition);
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(30deg);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (min-width: 768px) {
+            .app-container {
+                max-width: 600px;
+                margin: 0 auto;
+            }
+            
+            .style-options {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        /* Article Content */
+        .article-content {
+            display: none;
+            padding: 20px;
+        }
+
+        .article-content h2 {
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+
+        .article-content h3 {
+            margin: 15px 0 10px;
+            color: var(--secondary);
+        }
+
+        .article-content p {
+            margin-bottom: 15px;
+        }
+
+        .article-content ul, .article-content ol {
+            margin-bottom: 15px;
+            padding-left: 20px;
+        }
+
+        .back-btn {
+            background-color: var(--gray);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .back-btn svg {
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loader"></div>
+        <h1>QRGen</h1>
+    </div>
+
+    <!-- App Container -->
+    <div class="app-container">
+        <header>
+            <div class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 4H10V10H4V4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M14 4H20V10H14V4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M4 14H10V20H4V14Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M14 17C14 17.7956 14.3161 18.5587 14.8787 19.1213C15.4413 19.6839 16.2044 20 17 20C17.7956 20 18.5587 19.6839 19.1213 19.1213C19.6839 18.5587 20 17.7956 20 17C20 16.2044 19.6839 15.4413 19.1213 14.8787C18.5587 14.3161 17.7956 14 17 14C16.2044 14 15.4413 14.3161 14.8787 14.8787C14.3161 15.4413 14 16.2044 14 17Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                QRGen
+            </div>
+            <button class="menu-btn">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </header>
+
+        <nav>
+            <button class="close-nav">&times;</button>
+            <ul class="nav-list">
+                <li><a href="#" data-page="home">Home</a></li>
+                <li><a href="#" data-page="how-it-works">How it Works</a></li>
+                <li><a href="#" data-page="about">About</a></li>
+                <li><a href="#" data-page="examples">Examples / Presets</a></li>
+                <li><a href="#" data-page="terms">Terms & Privacy</a></li>
+                <li><a href="#" data-page="contact">Contact</a></li>
+            </ul>
+        </nav>
+
+        <main id="main-content">
+            <div class="card">
+                <h2>Create Your QR Code</h2>
+                <div class="input-group">
+                    <label for="url-input">Enter URL</label>
+                    <input type="url" id="url-input" placeholder="https://example.com">
+                    <div class="error-message" id="url-error">Please enter a valid URL</div>
+                </div>
+
+                <div class="input-group">
+                    <label>QR Code Style</label>
+                    <div class="style-options">
+                        <div class="style-option selected" data-style="squares">
+                            <div style="width:100%;height:100%;background:linear-gradient(45deg, #4361ee, #3a0ca3)"></div>
+                            <div class="style-name">Classic</div>
+                        </div>
+                        <div class="style-option" data-style="dots">
+                            <div style="width:100%;height:100%;background:linear-gradient(45deg, #4cc9f0, #4895ef)"></div>
+                            <div class="style-name">Dots</div>
+                        </div>
+                        <div class="style-option" data-style="rounded">
+                            <div style="width:100%;height:100%;background:linear-gradient(45deg, #f72585, #b5179e)"></div>
+                            <div class="style-name">Rounded</div>
+                        </div>
+                        <div class="style-option" data-style="gradient">
+                            <div style="width:100%;height:100%;background:linear-gradient(45deg, #ff9e00, #ff006e)"></div>
+                            <div class="style-name">Gradient</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>QR Code Color</label>
+                    <div class="color-options">
+                        <div class="color-option selected" style="background-color: #000000;" data-color="#000000"></div>
+                        <div class="color-option" style="background-color: #4361ee;" data-color="#4361ee"></div>
+                        <div class="color-option" style="background-color: #f72585;" data-color="#f72585"></div>
+                        <div class="color-option" style="background-color: #4cc9f0;" data-color="#4cc9f0"></div>
+                        <div class="color-option" style="background-color: #7209b7;" data-color="#7209b7"></div>
+                        <div class="color-option" style="background-color: #38b000;" data-color="#38b000"></div>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Center Logo (Optional)</label>
+                    <div class="logo-upload">
+                        <div class="logo-preview">
+                            <img id="logo-preview-img" src="" alt="Logo preview">
+                            <span>No logo</span>
+                        </div>
+                        <button class="logo-upload-btn" id="logo-upload-btn">Upload Logo</button>
+                        <input type="file" id="logo-upload-input" accept="image/*" style="display: none;">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>QR Code Size</label>
+                    <div class="size-options">
+                        <button id="size-decrease">-</button>
+                        <input type="number" id="qr-size" value="300" min="100" max="1000">
+                        <button id="size-increase">+</button>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="generate-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 6V12L16 14M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Generate QR
+                    </button>
+                    <button class="btn btn-secondary" id="reset-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 4H10V10H4V4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M14 4H20V10H14V4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M4 14H10V20H4V14Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M14 17C14 17.7956 14.3161 18.5587 14.8787 19.1213C15.4413 19.6839 16.2044 20 17 20C17.7956 20 18.5587 19.6839 19.1213 19.1213C19.6839 18.5587 20 17.7956 20 17C20 16.2044 19.6839 15.4413 19.1213 14.8787C18.5587 14.3161 17.7956 14 17 14C16.2044 14 15.4413 14.3161 14.8787 14.8787C14.3161 15.4413 14 16.2044 14 17Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Reset
+                    </button>
+                </div>
+            </div>
+
+            <div class="card" id="qr-result-card" style="display: none;">
+                <h2>Your QR Code</h2>
+                <div id="qr-preview-container">
+                    <div id="qr-preview"></div>
+                    <div class="download-options">
+                        <button class="btn btn-success" id="download-png">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            PNG
+                        </button>
+                        <button class="btn btn-warning" id="download-svg">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            SVG
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Article Content (Hidden by default) -->
+        <div id="article-content" class="article-content">
+            <button class="back-btn" id="back-button">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Back to Home
+            </button>
+            
+            <div id="how-it-works-content">
+                <h2>How It Works</h2>
+                <p>Our QR code generator is designed to be simple, fast, and privacy-focused. Here's how to create your custom QR code:</p>
+                
+                <h3>Step 1: Enter Your URL</h3>
+                <p>Type or paste the website address you want to encode into the QR code. Make sure to include "https://" for web URLs.</p>
+                
+                <h3>Step 2: Customize Your Design</h3>
+                <p>Choose from various styles (classic, dots, rounded, gradient) and select a color that matches your brand or preference.</p>
+                
+                <h3>Step 3: Add a Logo (Optional)</h3>
+                <p>Upload a logo or image to place in the center of your QR code. This helps with branding and makes your QR code unique.</p>
+                
+                <h3>Step 4: Generate and Download</h3>
+                <p>Click the generate button and within seconds your custom QR code will be ready. Download it as PNG or SVG for use in your projects.</p>
+                
+                <h3>Privacy First</h3>
+                <p>All processing happens directly in your browser - no data is sent to our servers. Your URLs remain private and secure.</p>
+            </div>
+            
+            <div id="about-content">
+                <h2>About QRGen</h2>
+                <p>QRGen is a free, privacy-focused QR code generator that works entirely in your browser. We believe in creating useful tools that respect user privacy and work seamlessly across all devices.</p>
+                
+                <h3>Our Mission</h3>
+                <p>To provide a fast, reliable, and secure way to generate QR codes without compromising user privacy. We don't store your data or track your activity.</p>
+                
+                <h3>Features</h3>
+                <ul>
+                    <li>100% client-side processing (no server requests)</li>
+                    <li>Multiple QR code styles and customization options</li>
+                    <li>Logo upload capability</li>
+                    <li>PNG and SVG download options</li>
+                    <li>Works offline after initial load</li>
+                    <li>Mobile-friendly interface</li>
+                    <li>Dark mode support</li>
+                </ul>
+                
+                <h3>Technology</h3>
+                <p>QRGen uses modern web technologies including HTML5, CSS3, and JavaScript. QR code generation is handled by the trusted qrcode.js library.</p>
+            </div>
+            
+            <div id="examples-content">
+                <h2>Examples & Presets</h2>
+                <p>Here are some examples of how you can use QRGen for different purposes:</p>
+                
+                <h3>Business Cards</h3>
+                <p>Create QR codes that link to your professional portfolio or LinkedIn profile. Use your company colors and logo for brand consistency.</p>
+                
+                <h3>Restaurant Menus</h3>
+                <p>Generate QR codes that point to digital menus. The rounded or dot styles work well for hospitality businesses.</p>
+                
+                <h3>Event Promotion</h3>
+                <p>Create eye-catching QR codes for event tickets or registration pages. Gradient styles work particularly well for events.</p>
+                
+                <h3>Product Packaging</h3>
+                <p>Add QR codes to your products that link to usage instructions, promotional content, or authentication pages.</p>
+                
+                <h3>Social Media</h3>
+                <p>Generate QR codes that link to your social media profiles. Use vibrant colors to make them stand out.</p>
+            </div>
+            
+            <div id="terms-content">
+                <h2>Terms of Service & Privacy Policy</h2>
+                
+                <h3>Terms of Service</h3>
+                <p>By using QRGen, you agree to the following terms:</p>
+                <ol>
+                    <li>QRGen is provided "as is" without any warranties</li>
+                    <li>You are responsible for the URLs you encode and their content</li>
+                    <li>We reserve the right to modify these terms at any time</li>
+                </ol>
+                
+                <h3>Privacy Policy</h3>
+                <p>Your privacy is important to us. QRGen:</p>
+                <ul>
+                    <li>Does not collect or store any personal information</li>
+                    <li>Processes all data locally in your browser</li>
+                    <li>Does not use tracking cookies or analytics</li>
+                    <li>Does not share any data with third parties</li>
+                </ul>
+                
+                <p>Since all QR code generation happens client-side, we never see the URLs you encode or the QR codes you create.</p>
+            </div>
+            
+            <div id="contact-content">
+                <h2>Contact Us</h2>
+                <p>We'd love to hear your feedback, suggestions, or questions about QRGen.</p>
+                
+                <h3>Feedback</h3>
+                <p>If you have ideas for new features or encounter any issues while using our QR code generator, please let us know.</p>
+                
+                <h3>Technical Support</h3>
+                <p>For technical support or troubleshooting, describe the issue you're experiencing and we'll do our best to help.</p>
+                
+                <h3>Get In Touch</h3>
+                <p>Email us at: <strong>brothersingh961@gmail.com</strong></p>
+                <p>Please note that as a free tool with no backend, we don't have a user database or account system, but we still value your input.</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>Made With ❤️ by MVR Team</p>
+        </footer>
+    </div>
+
+    <div class="theme-toggle" id="theme-toggle">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initial loading screen
+            setTimeout(function() {
+                document.getElementById('loading-screen').style.opacity = '0';
+                setTimeout(function() {
+                    document.getElementById('loading-screen').style.display = 'none';
+                    document.querySelector('.app-container').style.display = 'block';
+                }, 500);
+            }, 3000);
+
+            // Variables
+            const menuBtn = document.querySelector('.menu-btn');
+            const closeNav = document.querySelector('.close-nav');
+            const nav = document.querySelector('nav');
+            const navLinks = document.querySelectorAll('.nav-list a');
+            const mainContent = document.getElementById('main-content');
+            const articleContent = document.getElementById('article-content');
+            const backButton = document.getElementById('back-button');
+            const themeToggle = document.getElementById('theme-toggle');
+            const urlInput = document.getElementById('url-input');
+            const urlError = document.getElementById('url-error');
+            const styleOptions = document.querySelectorAll('.style-option');
+            const colorOptions = document.querySelectorAll('.color-option');
+            const logoUploadBtn = document.getElementById('logo-upload-btn');
+            const logoUploadInput = document.getElementById('logo-upload-input');
+            const logoPreviewImg = document.getElementById('logo-preview-img');
+            const sizeInput = document.getElementById('qr-size');
+            const sizeDecrease = document.getElementById('size-decrease');
+            const sizeIncrease = document.getElementById('size-increase');
+            const generateBtn = document.getElementById('generate-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const qrResultCard = document.getElementById('qr-result-card');
+            const qrPreview = document.getElementById('qr-preview');
+            const downloadPng = document.getElementById('download-png');
+            const downloadSvg = document.getElementById('download-svg');
+
+            let selectedStyle = 'squares';
+            let selectedColor = '#000000';
+            let logoImage = null;
+
+            // Menu toggle
+            menuBtn.addEventListener('click', function() {
+                nav.classList.add('open');
+                menuBtn.classList.add('active');
+            });
+
+            closeNav.addEventListener('click', function() {
+                nav.classList.remove('open');
+                menuBtn.classList.remove('active');
+            });
+
+            // Navigation
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = this.getAttribute('data-page');
+                    
+                    if (page === 'home') {
+                        mainContent.style.display = 'block';
+                        articleContent.style.display = 'none';
+                    } else {
+                        mainContent.style.display = 'none';
+                        articleContent.style.display = 'block';
+                        
+                        // Hide all article sections
+                        document.querySelectorAll('#article-content > div').forEach(div => {
+                            div.style.display = 'none';
+                        });
+                        
+                        // Show the selected article section
+                        document.getElementById(`${page}-content`).style.display = 'block';
+                    }
+                    
+                    nav.classList.remove('open');
+                    menuBtn.classList.remove('active');
+                });
+            });
+
+            // Back button
+            backButton.addEventListener('click', function() {
+                mainContent.style.display = 'block';
+                articleContent.style.display = 'none';
+            });
+
+            // Theme toggle
+            themeToggle.addEventListener('click', function() {
+                document.body.classList.toggle('dark-mode');
+            });
+
+            // Style selection
+            styleOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    styleOptions.forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedStyle = this.getAttribute('data-style');
+                });
+            });
+
+            // Color selection
+            colorOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    colorOptions.forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedColor = this.getAttribute('data-color');
+                });
+            });
+
+            // Logo upload
+            logoUploadBtn.addEventListener('click', function() {
+                logoUploadInput.click();
+            });
+
+            logoUploadInput.addEventListener('change', function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        logoPreviewImg.src = e.target.result;
+                        logoPreviewImg.style.display = 'block';
+                        logoImage = e.target.result;
+                        document.querySelector('.logo-preview span').style.display = 'none';
+                    }
+                    
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+
+            // Size controls
+            sizeDecrease.addEventListener('click', function() {
+                sizeInput.value = Math.max(100, parseInt(sizeInput.value) - 50);
+            });
+
+            sizeIncrease.addEventListener('click', function() {
+                sizeInput.value = Math.min(1000, parseInt(sizeInput.value) + 50);
+            });
+
+            // Generate QR code
+            generateBtn.addEventListener('click', function() {
+                const url = urlInput.value.trim();
+                
+                // Validate URL
+                if (!isValidUrl(url)) {
+                    urlError.style.display = 'block';
+                    return;
+                }
+                
+                urlError.style.display = 'none';
+                
+                // Show loading for QR generation
+                qrPreview.innerHTML = '<div class="loader" style="margin: 0 auto;"></div>';
+                qrResultCard.style.display = 'block';
+                
+                setTimeout(function() {
+                    generateQRCode(url, selectedStyle, selectedColor, logoImage, parseInt(sizeInput.value));
+                }, 3000);
+            });
+
+            // Reset form
+            resetBtn.addEventListener('click', function() {
+                urlInput.value = '';
+                urlError.style.display = 'none';
+                
+                styleOptions.forEach(opt => opt.classList.remove('selected'));
+                document.querySelector('.style-option[data-style="squares"]').classList.add('selected');
+                selectedStyle = 'squares';
+                
+                colorOptions.forEach(opt => opt.classList.remove('selected'));
+                document.querySelector('.color-option[data-color="#000000"]').classList.add('selected');
+                selectedColor = '#000000';
+                
+                logoPreviewImg.src = '';
+                logoPreviewImg.style.display = 'none';
+                document.querySelector('.logo-preview span').style.display = 'block';
+                logoImage = null;
+                logoUploadInput.value = '';
+                
+                sizeInput.value = '300';
+                
+                qrResultCard.style.display = 'none';
+            });
+
+            // Download handlers
+            downloadPng.addEventListener('click', function() {
+                const canvas = document.querySelector('#qr-preview canvas');
+                if (canvas) {
+                    const link = document.createElement('a');
+                    link.download = 'qrcode.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                }
+            });
+
+            downloadSvg.addEventListener('click', function() {
+                const svg = document.querySelector('#qr-preview svg');
+                if (svg) {
+                    const serializer = new XMLSerializer();
+                    const source = serializer.serializeToString(svg);
+                    const blob = new Blob([source], { type: 'image/svg+xml' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    const link = document.createElement('a');
+                    link.download = 'qrcode.svg';
+                    link.href = url;
+                    link.click();
+                    
+                    URL.revokeObjectURL(url);
+                }
+            });
+
+            // Utility functions
+            function isValidUrl(string) {
+                try {
+                    new URL(string);
+                    return true;
+                } catch (_) {
+                    return false;
+                }
+            }
+
+            function generateQRCode(url, style, color, logo, size) {
+                qrPreview.innerHTML = '';
+                
+                // Create QR code
+                QRCode.toCanvas(url, {
+                    width: size,
+                    height: size,
+                    color: {
+                        dark: color,
+                        light: '#ffffff'
+                    },
+                    ...(style === 'dots' && { 
+                        rendererOpts: { 
+                            dotsOptions: {
+                                type: 'rounded'
+                            }
+                        } 
+                    }),
+                    ...(style === 'rounded' && {
+                        rendererOpts: {
+                            cornersDotOptions: {
+                                type: 'dot'
+                            },
+                            cornersSquareOptions: {
+                                type: 'extra-rounded'
+                            },
+                            dotsOptions: {
+                                type: 'rounded'
+                            }
+                        }
+                    })
+                }, function(err, canvas) {
+                    if (err) {
+                        qrPreview.innerHTML = '<p>Error generating QR code</p>';
+                        return;
+                    }
+                    
+                    // Apply gradient if selected
+                    if (style === 'gradient') {
+                        const ctx = canvas.getContext('2d');
+                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        const data = imageData.data;
+                        
+                        for (let i = 0; i < data.length; i += 4) {
+                            if (data[i] === 0 && data[i+1] === 0 && data[i+2] === 0) {
+                                // This is a black pixel (part of QR code)
+                                const x = (i / 4) % canvas.width;
+                                const y = Math.floor((i / 4) / canvas.width);
+                                
+                                // Create gradient based on position
+                                const ratio = x / canvas.width;
+                                data[i] = Math.floor(255 * ratio);     // R
+                                data[i+1] = Math.floor(100 * ratio);   // G
+                                data[i+2] = Math.floor(150 * (1 - ratio)); // B
+                            }
+                        }
+                        
+                        ctx.putImageData(imageData, 0, 0);
+                    }
+                    
+                    qrPreview.appendChild(canvas);
+                    
+                    // Add logo if provided
+                    if (logo) {
+                        const logoSize = size / 5;
+                        const logoX = (size - logoSize) / 2;
+                        const logoY = (size - logoSize) / 2;
+                        
+                        const ctx = canvas.getContext('2d');
+                        const logoImg = new Image();
+                        
+                        logoImg.onload = function() {
+                            // Draw white background for logo
+                            ctx.fillStyle = '#ffffff';
+                            ctx.fillRect(logoX - 5, logoY - 5, logoSize + 10, logoSize + 10);
+                            
+                            // Draw logo
+                            ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
+                        };
+                        
+                        logoImg.src = logo;
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
